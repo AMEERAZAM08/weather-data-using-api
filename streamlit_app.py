@@ -1,42 +1,53 @@
 import streamlit as st
-import datetime as dt
-from googletrans import Translator
-import gtts
-from playsound import playsound
-import os
-trans=Translator()
-st.title('First streamlit project')
-now=dt.datetime.now()
+# To make things easier later, we're also importing numpy and pandas for
+# working with sample data.
+import numpy as np
+import pandas as pd
+import requests
+import time
+st.title('Weather Api using Streamlit ,python')
 
-st.write(f"it is now {now}")
+ 
 
-input_text=st.text_input('Enter English  Word')
-if st.button('Listen input'):
-    tts = gtts.gTTS(input_text, lang="en")
-    tts.save("hola.mp3")
-    playsound("hola.mp3")
-    os.remove("hola.mp3")
+def getWeather(path):
+    city = path
+    api = "https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid=56622db96b5640dd7d721d1d57524d71"
+    
+    json_data = requests.get(api).json()
+    condition = json_data['weather'][0]['main']
+    
+    temp = int(json_data['main']['temp'] - 273.15)
+
+    min_temp = int(json_data['main']['temp_min'] - 273.15)
+    
+    max_temp = int(json_data['main']['temp_max'] - 273.15)
+   
+    pressure = json_data['main']['pressure']
+
+    humidity = json_data['main']['humidity']
+
+    wind = json_data['wind']['speed']
+ 
+    sunrise = time.strftime('%I:%M:%S', time.gmtime(json_data['sys']['sunrise'] - 21600))
+
+    sunset = time.strftime('%I:%M:%S', time.gmtime(json_data['sys']['sunset'] - 21600))
+ 
+
+    final_info = condition + "\n" + str(temp) + "°C"
+    st.write(final_info) 
+    final_data = "\n"+ "Min Temp: " + str(min_temp) + "°C" + "\n" + "Max Temp: " + str(max_temp) + "°C" +"\n" + "Pressure: " + str(pressure) + "\n" +"Humidity: " + str(humidity) + "\n" +"Wind Speed: " + str(wind) + "\n" + "Sunrise: " + sunrise + "\n" + "Sunset: " + sunset
+    st.write(final_data)
+    df = pd.DataFrame(columns=['condition', 'temp', 'min_temp', 'max_temp','pressure','humidity','wind','sunrise','sunset'])
+    
+    
+    # label1.config(text = final_info)
+    #label2.config(text = final_data)
 
 
-
-dict={'arabic': 'ar','bengali': 'bn','english': 'en','french': 'fr','gujarati': 'gu','hindi': 'hi','indonesian': 'id','japanese': 'ja',
-    'malayalam': 'ml',
-    'marathi': 'mr',
-    'myanmar': 'my',
-    'nepali': 'ne',
-    'punjabi': 'pa',
-    'sindhi': 'sd',
-    'tamil': 'ta',
-    'telugu': 'te',
-    }
-option = st.selectbox( 'Choose Language in this menu',('arabic','bengali','french','gujarati','hindi','indonesian','japanese','malayalam','marathi','myanmar','nepali','punjabi','sindhi','tamil','telugu'))
-result=trans.translate(input_text,dest=dict[option]).text
-if st.button('Listen output'):
-    tts = gtts.gTTS(result, lang=dict[option])
-    tts.save("hola.mp3")
-    playsound("hola.mp3")
-    os.remove("hola.mp3")
-if st.button('Translate'):
-    st.success(result)
-    st.write(type(dict[option]))
-    st.write('You selected:',dict[option])
+path = st.text_input('Enter City  Name')
+if st.button('Get Weather'):
+#getWeather(path)
+    if path=="":
+        st.error("Please enter a valid city name")
+    else:
+        st.write(getWeather(path))
